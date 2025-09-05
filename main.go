@@ -56,8 +56,8 @@ func NewGateway() (*Gateway, error) {
 type InferenceRequest struct {
 	Prompt      string  `json:"prompt"`
 	Model       string  `json:"model"`
-	Temperature float64 `json:"temperature"`
-	MaxTokens   int     `json:"max_tokens"`
+	Temperature float32 `json:"temperature"`
+	MaxTokens   int32   `json:"max_tokens"`
 }
 
 func (g *Gateway) Close() error {
@@ -75,7 +75,10 @@ func (g *Gateway) handleInference(c *gin.Context) {
 	resp, err := g.client.Models.GenerateContent(ctx,
 		req.Model,
 		genai.Text(req.Prompt),
-		nil,
+		&genai.GenerateContentConfig{
+			Temperature:     &req.Temperature,
+			MaxOutputTokens: req.MaxTokens,
+		},
 	)
 	if err != nil {
 		c.Error(fmt.Errorf("failed to generate content: %w", err))
