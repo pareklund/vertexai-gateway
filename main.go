@@ -53,6 +53,13 @@ func NewGateway() (*Gateway, error) {
 	}, nil
 }
 
+type InferenceRequest struct {
+	Prompt      string  `json:"prompt"`
+	Model       string  `json:"model"`
+	Temperature float64 `json:"temperature"`
+	MaxTokens   int     `json:"max_tokens"`
+}
+
 func (g *Gateway) Close() error {
 	return nil
 }
@@ -60,9 +67,14 @@ func (g *Gateway) Close() error {
 func (g *Gateway) handleInference(c *gin.Context) {
 	ctx := context.Background()
 
+	var req InferenceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	resp, err := g.client.Models.GenerateContent(ctx,
-		"gemini-2.5-flash",
-		genai.Text("How does AI work?"),
+		req.Model,
+		genai.Text(req.Prompt),
 		nil,
 	)
 	if err != nil {
